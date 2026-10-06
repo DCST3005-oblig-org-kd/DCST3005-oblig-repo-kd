@@ -53,6 +53,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
+    env:
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_network_state_key: env/${{ inputs.environment }}/network.tfstate
+
     defaults:
       run:
         working-directory: stacks/app
@@ -74,6 +78,13 @@ jobs:
             --vault-name "${{ secrets.KEYVAULT_NAME }}" \
             --name "tfvars-$MILJO" \
             --query value -o tsv > params.auto.tfvars
+
+      - name: Les backend-verdier fra shared/backend.hcl
+        run: |
+          RG=$(sed -n 's/.*resource_group_name *= *"\(.*\)"/\1/p' "${{ github.workspace }}/shared/backend.hcl")
+          SA=$(sed -n 's/.*storage_account_name *= *"\(.*\)"/\1/p' "${{ github.workspace }}/shared/backend.hcl")
+          echo "TF_VAR_backend_resource_group_name=$RG" >> "$GITHUB_ENV"
+          echo "TF_VAR_backend_storage_account_name=$SA" >> "$GITHUB_ENV"
 
       - name: Init
         run: |
