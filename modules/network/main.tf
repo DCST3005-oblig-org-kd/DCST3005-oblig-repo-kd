@@ -25,7 +25,6 @@ resource "azurerm_network_security_group" "main" {
   }
 }
 
-
 resource "azurerm_subnet" "main" {
   for_each = var.subnets
 
@@ -33,6 +32,14 @@ resource "azurerm_subnet" "main" {
   resource_group_name  = var.rg_name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [cidrsubnet(var.vnet_cidr, 8, each.value)]
+
+  dynamic "service_endpoint" {
+    for_each = each.key == "data" ? ["Microsoft.Storage"] : []
+
+    content {
+      service = service_endpoint.value
+    }
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "main" {
